@@ -231,7 +231,7 @@ class TiendaControlApp {
     const todayStr = new Date().toISOString().split('T')[0];
     this.db = {
       version: '1.0',
-      storeName: 'Mi Tiendita',
+      storeName: 'Mi Tienda',
       products: JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)),
       suppliers: JSON.parse(JSON.stringify(DEFAULT_SUPPLIERS)),
       customers: JSON.parse(JSON.stringify(DEFAULT_CUSTOMERS)),
