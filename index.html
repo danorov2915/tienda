@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#070B14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="TiendaControl PRO - Sistema completo e inteligente de Punto de Venta, Inventario, Fiados y Proveedores para Abarrotes y Tiendas en México.">
+  <title>TiendaControl PRO - Punto de Venta & Abarrotes</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ENCABEZADO SUPERIOR -->
+  <header class="app-header">
+    <div class="brand-wrapper">
+      <div class="brand-logo-badge">🏪</div>
+      <div class="brand-text">
+        <h1>Mi Tiendita <span class="brand-badge">PRO</span></h1>
+        <div class="store-status-tag" id="storeStatusBadge">🟢 Abierto &bull; Caja Activa</div>
+      </div>
+      <div class="shift-badge-pill" id="btnHeaderShift" title="Toca para cambiar de turno o cajero">
+        <span>👤</span> <span id="currentShiftDisplay">Turno 1: Principal</span> ▾
+      </div>
+      <div class="shift-badge-pill" id="btnHeaderLicense" style="background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.35); color:var(--amber);" title="Estado de la Licencia (Toca para activar)">
+        <span id="licenseStatusIcon">⏳</span> <span id="licenseStatusLabel">Prueba: 7 días</span>
+      </div>
+    </div>
+    <div class="header-quick-actions">
+      <button class="btn-header-action scanner-btn" id="btnHeaderScanner" title="Escanear Código de Barras con Cámara">
+        <span>📷</span> Escáner
+      </button>
+      <button class="btn-header-action" id="btnHeaderExpense" title="Registrar Gasto Rápido de Caja">
+        <span>💸</span> Gasto
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENEDOR PRINCIPAL DE PANTALLAS -->
+  <main class="main-view-container">
+
+    <!-- ==========================================
+         VISTA 1: PUNTO DE VENTA (POS)
+         ========================================== -->
+    <section class="view-section active" id="viewPos">
+      <div class="pos-layout">
+        
+        <!-- Columna Izquierda: Buscador, Categorías y Productos -->
+        <div class="pos-left-column">
+          
+          <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <div class="pos-search-box" style="flex:1; margin-bottom:0;">
+              <span class="pos-search-icon">🔍</span>
+              <input type="text" class="pos-search-input" id="posSearchInput" placeholder="Buscar producto por nombre o código..." autocomplete="off">
+              <button class="pos-search-clear" id="posSearchClear" style="display:none;">✕</button>
+            </div>
+            <button type="button" class="btn-quick-sale" id="btnOpenQuickSaleModal" title="Vender producto sin código, suelto o del momento">
+              <span>⚡</span> Venta Libre
+            </button>
+          </div>
+
+          <div class="category-pills-bar" id="posCategoryPills">
+            <!-- Categorías dinámicas -->
+          </div>
+
+          <div class="pos-products-grid" id="posProductsGrid">
+            <!-- Tarjetas de productos dinámicos -->
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Panel del Carrito / Ticket de Venta -->
+        <div class="pos-cart-panel" id="posCartPanel">
+          <div class="cart-header">
+            <h3><span>🛒</span> Ticket de Venta</h3>
+            <button class="btn-clear-cart" id="btnClearCart" title="Vaciar canasta">Vaciar</button>
+          </div>
+
+          <div class="cart-items-list" id="cartItemsList">
+            <!-- Productos agregados al carrito -->
+          </div>
+
+          <div class="cart-footer">
+            <div class="cart-totals-row">
+              <span class="cart-total-label">Total a Pagar</span>
+              <span class="cart-total-amount" id="cartTotalDisplay">$0.00</span>
+            </div>
+            <button class="btn-checkout-charge" id="btnCheckout" disabled>
+              <span>💳</span> Cobrar Venta
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Barra Flotante de Carrito para Móviles (Visible solo en pantallas chicas) -->
+      <div class="mobile-cart-float-bar" id="mobileCartFloat">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="background:#10B981; color:#042718; font-weight:800; border-radius:99px; padding:2px 8px; font-size:0.8rem;" id="mobileCartCount">0</span>
+          <span style="font-weight:600; font-size:0.9rem; color:#fff;">Ver Carrito</span>
+        </div>
+        <div style="font-family:var(--font-mono); font-size:1.15rem; font-weight:800; color:var(--emerald-light);" id="mobileCartTotal">$0.00</div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         VISTA 2: INVENTARIO & CATÁLOGO
+         ========================================== -->
+    <section class="view-section" id="viewInventory">
+      
+      <!-- Métricas Clave de Inventario -->
+      <div class="stats-cards-grid">
+        <div class="stat-metric-card">
+          <span class="stat-metric-lbl">Productos</span>
+          <span class="stat-metric-val" id="invStatTotalProducts">0</span>
+          <span class="stat-metric-sub">En catálogo</span>
+        </div>
+        <div class="stat-metric-card">
+          <span class="stat-metric-lbl">Valor Costo</span>
+          <span class="stat-metric-val" id="invStatCostValue">$0</span>
+          <span class="stat-metric-sub">Capital invertido</span>
+        </div>
+        <div class="stat-metric-card">
+          <span class="stat-metric-lbl">Valor Venta</span>
+          <span class="stat-metric-val" id="invStatSaleValue">$0</span>
+          <span class="stat-metric-sub">Potencial estimado</span>
+        </div>
+        <div class="stat-metric-card">
+          <span class="stat-metric-lbl">Por Agotarse</span>
+          <span class="stat-metric-val" style="color:var(--amber);" id="invStatLowStock">0</span>
+          <span class="stat-metric-sub">Pedir a proveedor</span>
+        </div>
+      </div>
+
+      <!-- Barra de Herramientas de Inventario -->
+      <div class="inventory-toolbar">
+        <input type="text" class="inventory-search-input" id="invSearchInput" placeholder="Filtrar por nombre, categoría o código...">
+        <select class="form-select" id="invCategoryFilter" style="max-width:180px;">
+          <option value="all">Todas las Categorías</option>
+        </select>
+        <button class="btn btn-secondary" id="btnOpenExpirationsModal" title="Ver productos por caducar o registrar mermas">
+          <span>⏰</span> Caducidades / Mermas
+        </button>
+        <button class="btn btn-primary" id="btnOpenNewProductModal">
+          <span>+</span> Nuevo Producto
+        </button>
+      </div>
+
+      <!-- Tabla de Productos con Ajustes Rápidos -->
+      <div class="inventory-table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Código / Prod</th>
+              <th>Categoría</th>
+              <th>Costo</th>
+              <th>Precio</th>
+              <th>Margen</th>
+              <th>Existencia</th>
+              <th style="text-align:right;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTableBody">
+            <!-- Filas dinámicas -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         VISTA 3: LIBRETA DE FIADOS (CUENTAS POR COBRAR)
+         ========================================== -->
+    <section class="view-section" id="viewCredit">
+      
+      <div class="credit-summary-card">
+        <div>
+          <div style="font-size:0.85rem; color:#FCA5A5; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Total Pendiente por Cobrar</div>
+          <div class="credit-total-val" id="creditTotalOwed">$0.00</div>
+          <div style="font-size:0.75rem; color:#94A3B8;" id="creditClientsCount">0 clientes con saldo activo</div>
+        </div>
+        <div>
+          <button class="btn btn-primary" id="btnOpenNewCustomerModal">
+            <span>+</span> Nuevo Cliente Fiado
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <input type="text" class="inventory-search-input" id="creditSearchInput" placeholder="Buscar cliente por nombre o teléfono...">
+      </div>
+
+      <div id="creditCustomersList">
+        <!-- Lista de tarjetas de clientes fiados -->
+      </div>
+    </section>
+
+    <!-- ==========================================
+         VISTA 4: PROVEEDORES Y PEDIDOS
+         ========================================== -->
+    <section class="view-section" id="viewSuppliers">
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+        <div>
+          <h2 style="font-size:1.25rem; font-weight:800; color:#fff;">Directorio de Proveedores</h2>
+          <p style="font-size:0.78rem; color:var(--text-secondary);">Organiza los días de visita y haz pedidos directos por WhatsApp.</p>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-whatsapp" id="btnOpenRestockModal" title="Registrar mercancía recibida y descontar pago de caja">
+            <span>📥</span> Recibir Mercancía / Compra
+          </button>
+          <button class="btn btn-primary" id="btnOpenNewSupplierModal">
+            <span>+</span> Agregar Proveedor
+          </button>
+        </div>
+      </div>
+
+      <div id="suppliersListContainer">
+        <!-- Tarjetas dinámicas de proveedores -->
+      </div>
+    </section>
+
+    <!-- ==========================================
+         VISTA 5: CORTE DE CAJA, REPORTES Y RESPALDO
+         ========================================== -->
+    <section class="view-section" id="viewCash">
+      
+      <div style="margin-bottom:18px;">
+        <h2 style="font-size:1.25rem; font-weight:800; color:#fff;">Caja y Finanzas Diarias</h2>
+        <p style="font-size:0.78rem; color:var(--text-secondary);">Control de dinero en cajón, gastos del día, corte de turno y copias de seguridad.</p>
+      </div>
+
+      <!-- Resumen de Caja Actual -->
+      <div class="stats-cards-grid" style="margin-bottom:18px;">
+        <div class="stat-metric-card" style="border-color:rgba(59, 130, 246, 0.4);">
+          <span class="stat-metric-lbl">Fondo Inicial</span>
+          <span class="stat-metric-val" style="color:var(--blue);" id="cashStatInitial">$0.00</span>
+          <span class="stat-metric-sub">Dinero con el que abrió caja</span>
+        </div>
+        <div class="stat-metric-card" style="border-color:rgba(16, 185, 129, 0.4);">
+          <span class="stat-metric-lbl">Ventas del Día</span>
+          <span class="stat-metric-val" style="color:var(--emerald-light);" id="cashStatSales">$0.00</span>
+          <span class="stat-metric-sub" id="cashStatSalesCount">0 tickets emitidos</span>
+        </div>
+        <div class="stat-metric-card" style="border-color:rgba(239, 68, 68, 0.4);">
+          <span class="stat-metric-lbl">Salidas / Gastos</span>
+          <span class="stat-metric-val" style="color:var(--rose);" id="cashStatExpenses">$0.00</span>
+          <span class="stat-metric-sub">Pagos proveedores, etc.</span>
+        </div>
+        <div class="stat-metric-card" style="border-color:rgba(245, 158, 11, 0.4);">
+          <span class="stat-metric-lbl">Dinero Esperado</span>
+          <span class="stat-metric-val" style="color:var(--amber); font-size:1.5rem;" id="cashStatExpectedInDrawer">$0.00</span>
+          <span class="stat-metric-sub">Efectivo real en cajón</span>
+        </div>
+      </div>
+
+      <!-- Acciones de Caja -->
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+        <button class="btn btn-primary" id="btnSetInitialFund">
+          <span>💵</span> Modificar Fondo Inicial
+        </button>
+        <button class="btn btn-secondary" id="btnRegisterExpenseModal">
+          <span>💸</span> Registrar Salida / Gasto
+        </button>
+        <button class="btn btn-whatsapp" id="btnPerformCashCut">
+          <span>✂️</span> Realizar Corte de Caja (Día / Turno)
+        </button>
+      </div>
+
+      <!-- SECCIÓN: REPORTE DE GANANCIAS POR RANGO DE FECHAS -->
+      <div class="inventory-table-card" style="padding:18px; margin-bottom:20px; border:1px solid rgba(16, 185, 129, 0.35); background: linear-gradient(180deg, rgba(16, 185, 129, 0.06) 0%, rgba(15, 23, 42, 0.85) 100%);">
+        
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+          <div>
+            <h3 style="font-size:1.15rem; font-weight:800; color:#fff; display:flex; align-items:center; gap:8px;">
+              <span>📅</span> Reporte de Ganancias por Rango de Fechas
+            </h3>
+            <p style="font-size:0.78rem; color:var(--text-secondary); margin-top:3px;">
+              Selecciona cualquier periodo (días, semanas o meses) para calcular cuánto ganaste en neto, costo de productos y gastos.
+            </p>
+          </div>
+          <button class="btn btn-whatsapp" style="font-size:0.8rem; height:36px; padding:0 12px;" id="btnShareRangeReportWhatsApp">
+            <span>📲</span> Enviar Reporte por WhatsApp
+          </button>
+        </div>
+
+        <!-- Botones de Rango Rápido -->
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+          <button type="button" class="btn-bill range-preset-btn active" data-preset="today" style="font-size:0.75rem; padding:6px 12px; width:auto;">Hoy</button>
+          <button type="button" class="btn-bill range-preset-btn" data-preset="yesterday" style="font-size:0.75rem; padding:6px 12px; width:auto;">Ayer</button>
+          <button type="button" class="btn-bill range-preset-btn" data-preset="week" style="font-size:0.75rem; padding:6px 12px; width:auto;">Últimos 7 días</button>
+          <button type="button" class="btn-bill range-preset-btn" data-preset="month" style="font-size:0.75rem; padding:6px 12px; width:auto;">Este Mes</button>
+          <button type="button" class="btn-bill range-preset-btn" data-preset="lastMonth" style="font-size:0.75rem; padding:6px 12px; width:auto;">Mes Anterior</button>
+        </div>
+
+        <!-- Selectores de Fechas Personalizadas -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)) 120px; gap:10px; align-items:flex-end; margin-bottom:16px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Desde (Fecha Inicio)</label>
+            <input type="date" class="form-input" id="reportStartDate" style="color-scheme: dark;">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Hasta (Fecha Fin)</label>
+            <input type="date" class="form-input" id="reportEndDate" style="color-scheme: dark;">
+          </div>
+          <button class="btn btn-primary" id="btnFilterDateRange" style="height:44px;">
+            <span>🔍</span> Consultar
+          </button>
+        </div>
+
+        <!-- Tarjetas de Métricas del Rango -->
+        <div class="stats-cards-grid" style="margin-bottom:14px;">
+          <div class="stat-metric-card">
+            <span class="stat-metric-lbl">Ventas Totales</span>
+            <span class="stat-metric-val" style="color:#fff;" id="rangeStatSales">$0.00</span>
+            <span class="stat-metric-sub" id="rangeStatTicketsCount">0 tickets</span>
+          </div>
+          <div class="stat-metric-card">
+            <span class="stat-metric-lbl">Costo de Mercancía</span>
+            <span class="stat-metric-val" style="color:var(--text-secondary);" id="rangeStatCost">$0.00</span>
+            <span class="stat-metric-sub">Inversión en productos</span>
+          </div>
+          <div class="stat-metric-card">
+            <span class="stat-metric-lbl">Gastos del Periodo</span>
+            <span class="stat-metric-val" style="color:var(--rose);" id="rangeStatExpenses">$0.00</span>
+            <span class="stat-metric-sub">Salidas registradas</span>
+          </div>
+          <div class="stat-metric-card" style="border-color:var(--emerald); background:rgba(16, 185, 129, 0.12);">
+            <span class="stat-metric-lbl" style="color:var(--emerald-light);">Ganancia Neta Real</span>
+            <span class="stat-metric-val" style="color:var(--emerald-light); font-size:1.6rem;" id="rangeStatProfit">$0.00</span>
+            <span class="stat-metric-sub" id="rangeStatMargin" style="color:var(--emerald);">Margen: 0%</span>
+          </div>
+        </div>
+
+        <!-- Resumen Detallado y Desglose del Periodo -->
+        <div id="rangeReportDetails" style="background:rgba(0,0,0,0.3); border-radius:10px; padding:14px; border:1px solid rgba(255,255,255,0.05);">
+          <!-- Generado dinámicamente con desglose de métodos y top productos del periodo -->
+        </div>
+
+      </div>
+
+      <!-- Desglose por Método de Pago & Top Productos Vendidos -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:20px;">
+        
+        <div class="inventory-table-card" style="padding:16px;">
+          <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:12px; color:#fff;">💳 Ventas por Método de Pago</h3>
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="color:var(--text-secondary);">💵 Efectivo:</span>
+            <strong style="color:#fff;" id="cashBreakdownCash">$0.00</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="color:var(--text-secondary);">💳 Tarjeta Débito/Crédito:</span>
+            <strong style="color:#fff;" id="cashBreakdownCard">$0.00</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="color:var(--text-secondary);">📲 Transferencia / SPEI:</span>
+            <strong style="color:#fff;" id="cashBreakdownTransfer">$0.00</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="color:var(--text-secondary);">📒 Fiado (A crédito):</span>
+            <strong style="color:var(--rose);" id="cashBreakdownCredit">$0.00</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="color:var(--text-secondary);">📥 Abonos recibidos hoy:</span>
+            <strong style="color:var(--emerald-light);" id="cashBreakdownPayments">$0.00</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:10px 0 0 0; font-size:1rem;">
+            <span style="font-weight:700; color:var(--emerald-light);">Ganancia Estimada Hoy:</span>
+            <strong style="color:var(--emerald-light); font-family:var(--font-mono);" id="cashEstimatedProfit">$0.00</strong>
+          </div>
+        </div>
+
+        <div class="inventory-table-card" style="padding:16px;">
+          <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:12px; color:#fff;">🏆 Más Vendidos Hoy</h3>
+          <div id="topSellingProductsList">
+            <p style="color:var(--text-muted); font-size:0.8rem;">Sin ventas registradas hoy aún.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Herramientas de Respaldo y Restauración de Datos -->
+      <div class="inventory-table-card" style="padding:16px; border:1px dashed var(--border-color);">
+        <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:8px; color:#fff;">💾 Copia de Seguridad & Datos</h3>
+        <p style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:12px;">
+          Tus datos se guardan automáticamente en este celular/computadora. Puedes descargar una copia de seguridad en JSON o restaurar tus productos y clientes cuando quieras.
+        </p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-secondary" id="btnExportBackup">
+            <span>📥</span> Descargar Copia de Respaldo
+          </button>
+          <label class="btn btn-secondary" style="cursor:pointer;">
+            <span>📤</span> Restaurar Respaldo
+            <input type="file" id="inputRestoreBackup" accept=".json" style="display:none;">
+          </label>
+          <button class="btn btn-danger" id="btnResetFactoryDefaults" style="margin-left:auto;">
+            <span>⚠️</span> Reiniciar a Datos de Fábrica
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ==========================================
+       BARRA DE NAVEGACIÓN INFERIOR MÓVIL
+       ========================================== -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-view="viewPos">
+      <span class="nav-icon">🏷️</span>
+      <span>Vender</span>
+    </button>
+    <button class="nav-item" data-view="viewInventory">
+      <span class="nav-icon">📦</span>
+      <span>Inventario</span>
+      <span class="nav-badge-pill" id="navBadgeLowStock" style="display:none;">0</span>
+    </button>
+    <button class="nav-item" data-view="viewCredit">
+      <span class="nav-icon">📒</span>
+      <span>Fiados</span>
+      <span class="nav-badge-pill" id="navBadgeDebtors" style="display:none;">0</span>
+    </button>
+    <button class="nav-item" data-view="viewSuppliers">
+      <span class="nav-icon">🚚</span>
+      <span>Proveedores</span>
+    </button>
+    <button class="nav-item" data-view="viewCash">
+      <span class="nav-icon">📊</span>
+      <span>Corte/Caja</span>
+    </button>
+  </nav>
+
+  <!-- ==========================================
+       MODALES Y VENTANAS FLOTANTES
+       ========================================== -->
+
+  <!-- MODAL 1: COBRO / CHECKOUT Y CÁLCULO DE CAMBIO -->
+  <div class="modal-overlay" id="modalCheckout">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.05rem; font-weight:800; color:#fff;">💳 Cobro de Venta</h3>
+        <button class="btn-clear-cart" onclick="app.closeModal('modalCheckout')">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        
+        <div style="text-align:center; margin-bottom:14px;">
+          <span style="font-size:0.8rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700;">Total a Liquidar</span>
+          <div style="font-family:var(--font-mono); font-size:2.2rem; font-weight:800; color:var(--emerald-light);" id="checkoutModalTotal">$0.00</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Método de Pago</label>
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px;" id="paymentMethodButtonGroup">
+            <button type="button" class="btn btn-primary method-btn active" data-method="efectivo" style="font-size:0.75rem; padding:8px 2px;">💵 Efectivo</button>
+            <button type="button" class="btn btn-secondary method-btn" data-method="tarjeta" style="font-size:0.75rem; padding:8px 2px;">💳 Tarjeta</button>
+            <button type="button" class="btn btn-secondary method-btn" data-method="transferencia" style="font-size:0.75rem; padding:8px 2px;">📲 Transf.</button>
+            <button type="button" class="btn btn-secondary method-btn" data-method="fiado" style="font-size:0.75rem; padding:8px 2px;">📒 Fiado</button>
+          </div>
+        </div>
+
+        <!-- Sección Efectivo: Billetes rápidos y cambio -->
+        <div id="sectionCashPayment">
+          <div class="form-group">
+            <label class="form-label">Paga con (Efectivo Recibido)</label>
+            <input type="number" step="0.50" class="form-input" id="inputCashReceived" placeholder="0.00" style="font-size:1.3rem; font-family:var(--font-mono); text-align:center; font-weight:700;">
+          </div>
+
+          <label class="form-label" style="margin-top:10px;">Billetes Rápidos</label>
+          <div class="quick-bills-grid">
+            <button type="button" class="btn-bill" data-amount="exact">Exacto</button>
+            <button type="button" class="btn-bill" data-amount="20">$20</button>
+            <button type="button" class="btn-bill" data-amount="50">$50</button>
+            <button type="button" class="btn-bill" data-amount="100">$100</button>
+            <button type="button" class="btn-bill" data-amount="200">$200</button>
+            <button type="button" class="btn-bill" data-amount="500">$500</button>
+            <button type="button" class="btn-bill" data-amount="1000">$1000</button>
+            <button type="button" class="btn-bill" data-amount="clear">Borrar</button>
+          </div>
+
+          <div class="change-display-box">
+            <div class="change-label">Cambio a Devolver</div>
+            <div class="change-amount" id="displayCashChange">$0.00</div>
+          </div>
+        </div>
+
+        <!-- Sección Fiado: Selección del Cliente -->
+        <div id="sectionCreditPayment" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">Seleccionar Cliente que se Lleva el Fiado</label>
+            <select class="form-select" id="selectCreditCustomer">
+              <option value="">-- Elige un cliente --</option>
+            </select>
+          </div>
+          <div style="background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:10px; margin-bottom:14px; font-size:0.8rem; color:#FCA5A5;">
+            ⚠️ El monto se agregará automáticamente al saldo deudor de este cliente y se descontará del inventario.
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button class="btn btn-secondary" style="flex:1;" onclick="app.closeModal('modalCheckout')">Cancelar</button>
+          <button class="btn btn-primary" style="flex:2; font-size:1.05rem;" id="btnConfirmSale">
+            <span>✓</span> Finalizar Cobro
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: TICKET DIGITAL & WHATSAPP -->
+  <div class="modal-overlay" id="modalTicket">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.05rem; font-weight:800; color:#fff;">🧾 Ticket Digital</h3>
+        <button class="btn-clear-cart" onclick="app.closeModal('modalTicket')">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <div id="ticketReceiptPreview" style="background:#fff; color:#000; padding:16px; border-radius:8px; font-family:var(--font-mono); font-size:0.82rem; line-height:1.4; margin-bottom:16px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+          <!-- Ticket generado -->
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Enviar por WhatsApp al Cliente</label>
+          <div style="display:flex; gap:8px;">
+            <input type="tel" class="form-input" id="inputTicketWhatsAppNumber" placeholder="Ej: 5512345678 (10 dígitos)">
+            <button class="btn btn-whatsapp" id="btnSendTicketWhatsApp">
+              <span>📲</span> Enviar
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button class="btn btn-secondary" style="flex:1;" onclick="window.print()">🖨️ Imprimir</button>
+          <button class="btn btn-primary" style="flex:1;" onclick="app.closeModal('modalTicket')">Listo / Nueva Venta</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: NUEVO / EDITAR PRODUCTO -->
+  <div class="modal-overlay" id="modalProduct">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.05rem; font-weight:800; color:#fff;" id="modalProductTitle">Nuevo Producto</h3>
+        <button class="btn-clear-cart" onclick="app.closeModal('modalProduct')">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <form id="formProduct" onsubmit="event.preventDefault(); app.saveProduct();">
+          <input type="hidden" id="prodFormId">
+          
+          <div class="form-group">
+            <label class="form-label">Código de Barras (Opcional)</label>
+            <div style="display:flex; gap:8px;">
+              <input type="text" class="form-input" id="prodFormBarcode" placeholder="Escanea o escribe el código...">
+              <button type="button" class="btn btn-secondary" id="btnScanForProductForm">📷</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Nombre del Producto *</label>
+            <input type="text" class="form-input" id="prodFormName" required placeholder="Ej: Coca Cola 600ml, Sabritas Sal 45g...">
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group">
+              <label class="form-label">Categoría</label>
+              <select class="form-select" id="prodFormCategory">
+                <option value="Bebidas">🥤 Bebidas</option>
+                <option value="Botanas">🥔 Botanas</option>
+                <option value="Panadería">🍞 Panadería</option>
+                <option value="Lácteos">🥛 Lácteos</option>
+                <option value="Abarrotes">🥫 Abarrotes</option>
+                <option value="Limpieza">🧼 Limpieza</option>
+                <option value="Granel">⚖️ Granel/Kilos</option>
+                <option value="Dulces">🍬 Dulces</option>
+                <option value="Otros">📦 Otros</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Unidad de Venta</label>
+              <select class="form-select" id="prodFormUnit">
+                <option value="pza">Pieza (pza)</option>
+                <option value="kg">Kilo (kg)</option>
+                <option value="lt">Litro (lt)</option>
+                <option value="paq">Paquete (paq)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group">
+              <label class="form-label">Precio Costo ($)</label>
+              <input type="number" step="0.10" class="form-input" id="prodFormCost" required placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Precio Venta ($) *</label>
+              <input type="number" step="0.10" class="form-input" id="prodFormPrice" required placeholder="0.00">
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group">
+              <label class="form-label">Stock Actual</label>
+              <input type="number" step="any" class="form-input" id="prodFormStock" required placeholder="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Alerta Mínima</label>
+              <input type="number" step="1" class="form-input" id="prodFormMinStock" value="3">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Fecha de Caducidad (Opcional)</label>
+            <input type="date" class="form-input" id="prodFormExpDate" style="color-scheme:dark;">
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:16px;">
+            <button type="button" class="btn btn-secondary" style="flex:1;" onclick="app.closeModal('modalProduct')">Cancelar</button>
+            <button type="submit" class="btn btn-primary" style="flex:2;">Guardar Producto</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: AGREGAR / EDITAR CLIENTE FIADO -->
+  <div class="modal-overlay" id="modalCustomer">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.05rem; font-weight:800; color:#fff;" id="modalCustomerTitle">Nuevo Cliente Fiado</h3>
+        <button class="btn-clear-cart" onclick="app.closeModal('modalCustomer')">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <form id="formCustomer" onsubmit="event.preventDefault(); app.saveCustomer();">
+          <input type="hidden" id="custFormId">
+
+          <div class="form-group">
+            <label class="form-label">Nombre Completo o Apodo *</label>
+            <input type="text" class="form-input" id="custFormName" required placeholder="Ej: Doña Mary, Don Beto...">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Teléfono Celular (Para Recordatorios WhatsApp)</label>
+            <input type="tel" class="form-input" id="custFormPhone" placeholder="Ej: 5512345678">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Límite Máximo de Crédito ($)</label>
+            <input type="number" step="50" class="form-input" id="custFormLimit" value="1000" placeholder="1000">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Dirección o Referencia</label>
+            <input type="text" class="form-input" id="custFormAddress" placeholder="Ej: Casa azul esq. con Hidalgo">
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:16px;">
+            <button type="button" class="btn btn-secondary" style="flex:1;" onclick="app.closeModal('modalCustomer')">Cancelar</button>
+            <button type="submit" class="btn btn-primary" style="flex:2;">Guardar Cliente</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: REGISTRAR ABONO O NUEVA DEUDA A CLIENTE -->
+  <div class="modal-overlay" id="modalCreditTransaction">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.05rem; font-weight:800; color:#fff;" id="modalCreditTransTitle">Registrar Movimiento</h3>
+        <button class="btn-clear-cart" onclick="app.closeModal('modalCreditTransaction')">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:8px; padding:12px; margin-bottom:14px;">
+          <div style="font-size:0.78rem; color:var(--text-secondary);">Cliente Seleccionado</div>
+          <div style="font-size:1.1rem; font-weight:800; color:#fff;" id="creditTransCustomerName">-</div>
+          <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:0.85rem;">
+            <span>Deuda Actual:</span>
+            <strong style="color:var(--rose); font-family:var(--font-mono);" id="creditTransCurrentDebt">$0.00</strong>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tipo de Operación</label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button type="button" class="btn btn-primary credit-type-btn active" id="btnTypePayment" onclick="app.setCreditTransType('payment')">
+              📥 Recibir Abono
+            </button>
+            <button type="button" class="btn btn-secondary credit-type-btn" id="btnTypeCharge" onclick="app.setCreditTransType('charge')">
+              ➕ Sumar Fiado
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Monto ($) *</label>
+          <input type="number" step="0.50" class="form-input" id="creditTransAmount" required placeholder="0.00" style="font-size:1.25rem; font-family:var(--font-mono); font-weight:700;">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Concepto o Nota</label>
+          <input type="text" class="form-input" id="creditTransNote" placeholder="Ej: Pago parcial, Se llevó 1 reja de huevos...">
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button type="button" class="btn btn-secondary" style="flex:1;" onclick="app.closeModal('modalCreditTransaction')">Cancelar</button>
+          <button type="button" class="btn btn-primary" style="flex:2;" id="btnConfirmCreditTrans" onclick="app.saveCreditTransaction()">
+            Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 6: AGREGAR / EDITAR PROVEEDOR -->
+  <div class="modal-overlay" id="modalSupplier">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.05rem; font-weight:800; color:#fff;" id="modalSupplierTitle">Nuevo Proveedor</h3>
+        <button class="btn-clear-cart" onclick="app.closeModal('modalSupplier')">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <form id="formSupplier" onsubmit="event.preventDefault(); app.saveSupplier();">
+          <input type="hidden" id="suppFormId">
+
+          <div class="form-group">
+            <label class="form-label">Empresa o Marca *</label>
+            <input type="text" class="form-input" id="suppFormCompany" required placeholder="Ej: Coca-Cola, Bimbo, Sabritas, Lala...">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Nombre del Vendedor / Preventista</label>
+            <input type="text" class="form-input" id="suppFormContact" placeholder="Ej: Carlos Gómez">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Teléfono / WhatsApp de Pedidos *</label>
+            <input type="tel" class="form-input" id="suppFormPhone" required placeholder="Ej: 5512345678">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Día(s) Habitual de Visita o Entrega</label>
+            <select class="form-select" id="suppFormVisitDay">
+              <option value="Lunes">Lunes</option>
+              <option value="Martes">Martes</option>
+              <option value="Miércoles">Miércoles</option>
+              <option value="Jueves">Jueves</option>
+              <option value="Viernes">Viernes</option>
+              <option value="Sábado">Sábado</option>
+              <option value="Semanal">Semanal Variable</option>
+              <option value="Bajo Pedido">Bajo Pedido</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notas o Productos que le compras</label>
+            <textarea class="form-input" id="suppFormNotes" rows="2" placeholder="Ej: Refrescos, Jugos del Valle. Pedir mínimo 5 cajas..."></textarea>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:16px;">
+            <button type="button" class="btn btn-secondary" style="flex:1;" onclick="app.closeModal('modalSupplier')">Cancelar</button>
+            <button type="submit" class="btn btn-primary" style="flex:2;">Guardar Proveedor</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 7: REGISTRO DE SALIDA / GASTO / FONDO DE CAJA -->
+  <div class="modal-overlay" id="modalCashMovement">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.05rem; font-weight:800; color:#fff;" id="modalCashMoveTitle">Registrar Gasto de Caja</h3>
+        <button class="btn-clear-cart" onclick="app.closeModal('modalCashMovement')">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <form id="formCashMovement" onsubmit="event.preventDefault(); app.saveCashMovement();">
+          <input type="hidden" id="cashMoveType" value="expense">
+
+          <div class="form-group">
+            <label class="form-label">Monto ($) *</label>
+            <input type="number" step="0.50" class="form-input" id="cashMoveAmount" required placeholder="0.00" style="font-size:1.3rem; font-family:var(--font-mono); font-weight:700;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Motivo o Concepto *</label>
+            <input type="text" class="form-input" id="cashMoveConcept" required placeholder="Ej: Pago de gas, garrafón, verdura, retiro del dueño...">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Categoría del Gasto</label>
+            <select class="form-select" id="cashMoveCategory">
+              <option value="Proveedor">Pago a Proveedor</option>
+              <option value="Servicios">Servicios (Luz, Agua, Internet)</option>
+              <option value="Comida/Operación">Comida / Gastos de Tienda</option>
+              <option value="Retiro">Retiro Personal del Dueño</option>
+              <option value="Otro">Otro Gasto</option>
+            </select>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:16px;">
+            <button type="button" class="btn btn-secondary" style="flex:1;" onclick="app.closeModal('modalCashMovement')">Cancelar</button>
+            <button type="submit" class="btn btn-danger" style="flex:2;" id="btnSubmitCashMove">Registrar Salida</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 8: ESCÁNER DE CÓDIGO DE BARRAS CON CÁMARA -->
+  <div class="modal-overlay" id="modalScanner">
+    <div class="modal-sheet" style="max-width:440px;">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.05rem; font-weight:800; color:#fff;">📷 Escáner de Código de Barras</h3>
+        <button class="btn-clear-cart" onclick="app.closeScanner()">✕</button>
+      </div>
+      <div class="modal-sheet-body" style="text-align:center;">
+        
+        <div style="position:relative; width:100%; height:250px; background:#000; border-radius:12px; overflow:hidden; margin-bottom:14px; display:flex; align-items:center; justify-content:center;">
+          <video id="scannerVideo" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover;"></video>
+          
+          <!-- Mira guía de escaneo -->
+          <div style="position:absolute; width:80%; height:120px; border:2px dashed #10B981; border-radius:8px; box-shadow:0 0 20px rgba(16,185,129,0.4); pointer-events:none;"></div>
+          <div style="position:absolute; bottom:10px; font-size:0.75rem; color:#fff; background:rgba(0,0,0,0.6); padding:4px 10px; border-radius:99px; pointer-events:none;">
+            Apunta la cámara al código de barras
+          </div>
+        </div>
+
+        <div style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:10px;">
+          O introduce el código manualmente:
+        </div>
+
+        <div style="display:flex; gap:8px;">
+          <input type="text" class="form-input" id="manualBarcodeInput" placeholder="Código manual...">
+          <button class="btn btn-primary" id="btnSubmitManualBarcode">Buscar</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 9: REPORTE DE CORTE DE CAJA -->
+  <div class="modal-overlay" id="modalCorteCaja">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.05rem; font-weight:800; color:#fff;">✂️ Reporte de Corte de Caja</h3>
+        <button class="btn-clear-cart" onclick="app.closeModal('modalCorteCaja')">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <div id="corteReceiptPreview" style="background:#fff; color:#000; padding:16px; border-radius:8px; font-family:var(--font-mono); font-size:0.82rem; line-height:1.4; margin-bottom:16px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+          <!-- Resumen del corte -->
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-whatsapp" style="flex:1;" id="btnShareCorteWhatsApp">
+            <span>📲</span> Enviar Resumen al Dueño
+          </button>
+          <button class="btn btn-secondary" style="flex:1;" onclick="window.print()">
+            <span>🖨️</span> Imprimir
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST DE NOTIFICACIONES -->
+  <div class="toast-notice" id="toastNotice">Acción realizada exitosamente</div>
+
+  <!-- SCRIPTS -->
+  <script src="app.js"></script>
+
+  <!-- MODAL 10: VENTA LIBRE / PRODUCTO RÁPIDO -->
+  <div class="modal-overlay" id="modalQuickSale">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.05rem; font-weight:800; color:#fff;">⚡ Venta Libre / Producto del Momento</h3>
+        <button class="btn-clear-cart" onclick="app.closeModal('modalQuickSale')">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <p style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:14px;">
+          Para cobrar cosas que no tienen código o no están en el catálogo (bolillos, cigarros sueltos, hielo, cilantro, recargas, etc.). Se registrará con su nombre en el ticket y en el corte de caja.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">¿De qué se trata? (Descripción del Artículo) *</label>
+          <input type="text" class="form-input" id="quickSaleConcept" placeholder="Ej: 3 Bolillos calientitos, Bolsa de Hielo, Cilantro..." required>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group">
+            <label class="form-label">Precio a Cobrar ($) *</label>
+            <input type="number" step="0.50" class="form-input" id="quickSalePrice" placeholder="0.00" style="font-size:1.3rem; font-family:var(--font-mono); font-weight:700; color:var(--emerald-light);" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Costo Estimado ($ Opcional)</label>
+            <input type="number" step="0.50" class="form-input" id="quickSaleCost" placeholder="0.00" style="font-size:1.1rem; font-family:var(--font-mono);">
+          </div>
+        </div>
+
+        <!-- Botones rápidos sugeridos -->
+        <label class="form-label">Sugerencias Rápidas:</label>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;">
+          <button type="button" class="btn-bill" style="font-size:0.75rem; padding:6px 10px; width:auto;" onclick="app.setQuickSalePreset('Bolillo', 3.50, 2.50)">🍞 Bolillo ($3.50)</button>
+          <button type="button" class="btn-bill" style="font-size:0.75rem; padding:6px 10px; width:auto;" onclick="app.setQuickSalePreset('Bolsa de Hielo', 28.00, 20.00)">🧊 Hielo ($28)</button>
+          <button type="button" class="btn-bill" style="font-size:0.75rem; padding:6px 10px; width:auto;" onclick="app.setQuickSalePreset('Cigarro Suelto', 8.00, 5.00)">🚬 Cigarro ($8)</button>
+          <button type="button" class="btn-bill" style="font-size:0.75rem; padding:6px 10px; width:auto;" onclick="app.setQuickSalePreset('Recarga Telefónica', 50.00, 48.00)">📱 Recarga ($50)</button>
+          <button type="button" class="btn-bill" style="font-size:0.75rem; padding:6px 10px; width:auto;" onclick="app.setQuickSalePreset('Verdura / Recaudo', 15.00, 10.00)">🥬 Verdura ($15)</button>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button type="button" class="btn btn-secondary" style="flex:1;" onclick="app.closeModal('modalQuickSale')">Cancelar</button>
+          <button type="button" class="btn btn-primary" style="flex:2;" onclick="app.addQuickSaleToCart()">
+            <span>🛒</span> Agregar al Carrito
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 11: CALCULADORA DE GRANEL Y BÁSCULA -->
+  <div class="modal-overlay" id="modalBulkSale">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.05rem; font-weight:800; color:#fff;" id="bulkModalTitle">⚖️ Venta a Granel / Báscula</h3>
+        <button class="btn-clear-cart" onclick="app.closeModal('modalBulkSale')">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        
+        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:10px; padding:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:1.05rem; font-weight:800; color:#fff;" id="bulkProdName">-</div>
+            <div style="font-size:0.75rem; color:var(--text-secondary);">Precio base por Kilo:</div>
+          </div>
+          <div style="font-family:var(--font-mono); font-size:1.4rem; font-weight:800; color:var(--emerald-light);" id="bulkPricePerKgDisplay">$0.00/kg</div>
+        </div>
+
+        <!-- Pestañas: Por Dinero vs Por Peso -->
+        <div class="bulk-tabs-container">
+          <button type="button" class="bulk-tab-btn active" id="tabBulkByMoney" onclick="app.switchBulkMode('money')">
+            💵 Por Dinero ($)
+          </button>
+          <button type="button" class="bulk-tab-btn" id="tabBulkByWeight" onclick="app.switchBulkMode('weight')">
+            ⚖️ Por Peso (Kg / Gramos)
+          </button>
+        </div>
+
+        <!-- MODO A: Vender por Dinero (ej. "Deme $20 pesos de queso") -->
+        <div id="sectionBulkMoney">
+          <div class="form-group">
+            <label class="form-label">¿Cuánto dinero pidió el cliente? ($)</label>
+            <input type="number" step="1" class="form-input" id="bulkInputMoney" placeholder="Ej: 15, 20, 50..." style="font-size:1.3rem; font-family:var(--font-mono); font-weight:700;">
+          </div>
+          
+          <label class="form-label">Montos Habituales:</label>
+          <div class="bulk-quick-pills">
+            <button type="button" class="btn-bulk-pill" onclick="app.setBulkMoneyQuick(10)">$10</button>
+            <button type="button" class="btn-bulk-pill" onclick="app.setBulkMoneyQuick(15)">$15</button>
+            <button type="button" class="btn-bulk-pill" onclick="app.setBulkMoneyQuick(20)">$20</button>
+            <button type="button" class="btn-bulk-pill" onclick="app.setBulkMoneyQuick(25)">$25</button>
+            <button type="button" class="btn-bulk-pill" onclick="app.setBulkMoneyQuick(50)">$50</button>
+            <button type="button" class="btn-bulk-pill" onclick="app.setBulkMoneyQuick(100)">$100</button>
+          </div>
+        </div>
+
+        <!-- MODO B: Vender por Peso (ej. "Pesó 0.420 kg en la báscula") -->
+        <div id="sectionBulkWeight" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">Peso en Báscula (Kilogramos o Fracción)</label>
+            <input type="number" step="0.005" class="form-input" id="bulkInputWeight" placeholder="Ej: 0.250, 0.500, 1.250..." style="font-size:1.3rem; font-family:var(--font-mono); font-weight:700;">
+          </div>
+
+          <label class="form-label">Fracciones Habituales:</label>
+          <div class="bulk-quick-pills">
+            <button type="button" class="btn-bulk-pill" onclick="app.setBulkWeightQuick(0.250)">1/4 Kg (250g)</button>
+            <button type="button" class="btn-bulk-pill" onclick="app.setBulkWeightQuick(0.500)">1/2 Kg (500g)</button>
+            <button type="button" class="btn-bulk-pill" onclick="app.setBulkWeightQuick(0.750)">3/4 Kg (750g)</button>
+            <button type="button" class="btn-bulk-pill" onclick="app.setBulkWeightQuick(1.000)">1 Kilo (1,000g)</button>
+          </div>
+        </div>
+
+        <!-- Recuadro Resultado del Cálculo -->
+        <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:12px; margin-top:16px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700;">Cantidad Calculada:</div>
+            <div style="font-size:1.05rem; font-weight:800; color:#fff;" id="bulkCalculatedSubtext">0.000 kg</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700;">Total a Cobrar:</div>
+            <div style="font-family:var(--font-mono); font-size:1.6rem; font-weight:800; color:var(--emerald-light);" id="bulkCalculatedTotal">$0.00</div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button type="button" class="btn btn-secondary" style="flex:1;" onclick="app.closeModal('modalBulkSale')">Cancelar</button>
+          <button type="button" class="btn btn-primary" style="flex:2;" onclick="app.addBulkProductToCart()">
+            <span>🛒</span> Agregar al Ticket
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 12: RECEPCIÓN DE MERCANCÍA / COMPRA A PROVEEDOR -->
+  <div class="modal-overlay" id="modalRestock">
+    <div class="modal-sheet" style="max-width:550px;">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.05rem; font-weight:800; color:#fff;">📥 Recepción de Mercancía / Compra</h3>
+        <button class="btn-clear-cart" onclick="app.closeModal('modalRestock')">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <p style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:14px;">
+          Registra las cajas o paquetes que te dejó el repartidor. El sistema incrementará el inventario automáticamente y registrará la salida del dinero de la caja si le pagaste en efectivo.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Proveedor que Entrega *</label>
+          <select class="form-select" id="restockSupplierSelect">
+            <!-- Dinámico -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Producto a Surtir *</label>
+          <select class="form-select" id="restockProductSelect">
+            <!-- Dinámico -->
+          </select>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group">
+            <label class="form-label">Cantidad Recibida *</label>
+            <input type="number" step="any" class="form-input" id="restockQty" placeholder="Ej: 12, 24..." required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Costo Unitario ($) *</label>
+            <input type="number" step="0.10" class="form-input" id="restockCost" placeholder="0.00" required>
+          </div>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:8px; padding:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:0.85rem; color:var(--text-secondary); font-weight:700;">Total a Pagar al Repartidor:</span>
+          <span style="font-family:var(--font-mono); font-size:1.35rem; font-weight:800; color:var(--rose);" id="restockTotalDisplay">$0.00</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Forma de Pago al Repartidor</label>
+          <select class="form-select" id="restockPaymentMethod">
+            <option value="cash_drawer">💵 Efectivo tomado de la Caja de la tienda (Resta en corte)</option>
+            <option value="transfer">📲 Transferencia / Pago del Dueño (No toca caja)</option>
+            <option value="credit">🚚 A Crédito del Proveedor (Pagar en siguiente visita)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Número de Nota o Factura (Opcional)</label>
+          <input type="text" class="form-input" id="restockInvoiceNumber" placeholder="Ej: Folio 94812 o Bimbo #33">
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button type="button" class="btn btn-secondary" style="flex:1;" onclick="app.closeModal('modalRestock')">Cancelar</button>
+          <button type="button" class="btn btn-primary" style="flex:2;" onclick="app.saveRestockEntry()">
+            <span>✓</span> Confirmar Surtido
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 13: CADUCIDADES Y CONTROL DE MERMAS -->
+  <div class="modal-overlay" id="modalExpirations">
+    <div class="modal-sheet" style="max-width:550px;">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.05rem; font-weight:800; color:#fff;">⏰ Alertas de Caducidad & Mermas</h3>
+        <button class="btn-clear-cart" onclick="app.closeModal('modalExpirations')">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <p style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:14px;">
+          Productos con fecha de vencimiento próxima o vencidos para poner en oferta o cambiar con el preventista.
+        </p>
+
+        <!-- Lista de Productos por Vencer -->
+        <div id="expirationsListContainer" style="max-height:240px; overflow-y:auto; margin-bottom:18px;">
+          <!-- Dinámico -->
+        </div>
+
+        <!-- Registro de Merma o Pérdida -->
+        <div style="border-top:1px dashed var(--border-color); padding-top:14px;">
+          <h4 style="font-size:0.9rem; font-weight:700; color:#fff; margin-bottom:8px;">🗑️ Registrar Merma o Devolución</h4>
+          <div class="form-group">
+            <label class="form-label">Producto dañado, roto o vencido</label>
+            <select class="form-select" id="wasteProductSelect">
+              <!-- Dinámico -->
+            </select>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group">
+              <label class="form-label">Cantidad de piezas / kg</label>
+              <input type="number" step="any" class="form-input" id="wasteQty" placeholder="1" value="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Motivo de la Merma</label>
+              <select class="form-select" id="wasteReason">
+                <option value="Caducado">Caducado / Vencido</option>
+                <option value="Cambio a Proveedor">Devolución / Cambio con Proveedor</option>
+                <option value="Dañado/Roto">Dañado / Se cayó / Roto</option>
+                <option value="Consumo de la tienda">Consumo interno de la tienda</option>
+              </select>
+            </div>
+          </div>
+          <button type="button" class="btn btn-danger" style="width:100%; font-size:0.85rem;" onclick="app.saveWaste()">
+            <span>🗑️</span> Descontar del Inventario como Merma
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 14: CAMBIO DE TURNO / CORTE PARCIAL X -->
+  <div class="modal-overlay" id="modalShiftChange">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.05rem; font-weight:800; color:#fff;">👥 Control de Turnos & Cajeros</h3>
+        <button class="btn-clear-cart" onclick="app.closeModal('modalShiftChange')">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        
+        <div style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:10px; padding:14px; margin-bottom:16px;">
+          <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700;">Turno Activo Actual:</div>
+          <div style="font-size:1.2rem; font-weight:800; color:#fff;" id="shiftCurrentNameDisplay">Turno 1: Principal</div>
+          <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.82rem;">
+            <span>Ventas cobradas en este turno:</span>
+            <strong style="color:var(--emerald-light); font-family:var(--font-mono);" id="shiftCurrentSalesDisplay">$0.00</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:0.82rem;">
+            <span>Efectivo actual en cajón:</span>
+            <strong style="color:var(--amber); font-family:var(--font-mono);" id="shiftCurrentCashDisplay">$0.00</strong>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nombre del Cajero / Turno que Entra</label>
+          <input type="text" class="form-input" id="shiftNewNameInput" placeholder="Ej: Turno Tarde - Don Beto o María">
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button type="button" class="btn btn-secondary" style="flex:1;" onclick="app.closeModal('modalShiftChange')">Cerrar</button>
+          <button type="button" class="btn btn-primary" style="flex:2;" onclick="app.confirmShiftChange()">
+            <span>🔄</span> Cambiar de Turno
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL 15: ACTIVACIÓN DE LICENCIA Y PANTALLA DE BLOQUEO POR DÍA 8 -->
+  <div class="modal-overlay" id="modalActivation">
+    <div class="modal-sheet" style="max-width:480px; text-align:center;">
+      <div class="modal-sheet-header" id="activationModalHeader">
+        <h3 style="font-size:1.1rem; font-weight:800; color:#fff;" id="activationModalTitle">🔑 Licencia de TiendaControl PRO</h3>
+        <button class="btn-clear-cart" id="btnCloseActivationModal" onclick="app.closeModal('modalActivation')">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        
+        <div style="font-size:2.8rem; margin-bottom:8px;" id="activationIcon">🏪</div>
+        <h4 style="font-size:1.2rem; font-weight:800; color:#fff; margin-bottom:6px;" id="activationHeadline">
+          Periodo de Demostración
+        </h4>
+        <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:16px;" id="activationDescription">
+          Disfruta de todas las funciones sin restricciones durante 7 días para probar tu inventario, ventas, fiados y proveedores.
+        </p>
+
+        <!-- Recuadro con Código de Tienda -->
+        <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:12px; padding:14px; margin-bottom:16px;">
+          <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Tu Código de Tienda (ID de Dispositivo)</div>
+          <div style="font-family:var(--font-mono); font-size:1.6rem; font-weight:800; color:var(--emerald-light); letter-spacing:1px; margin:4px 0;" id="displayStoreId">
+            TC-0000-0000
+          </div>
+          <div style="font-size:0.72rem; color:var(--text-secondary);">
+            Proporciona este código al vendedor para recibir tu clave permanente.
+          </div>
+        </div>
+
+        <!-- Formulario de Activación -->
+        <div class="form-group" style="text-align:left;">
+          <label class="form-label">Introduce tu Código de Activación</label>
+          <input type="text" class="form-input" id="inputActivationKey" placeholder="Ej: ACT-8492-3819-2041" style="font-family:var(--font-mono); font-size:1.05rem; font-weight:700; text-align:center; text-transform:uppercase; letter-spacing:1px;">
+        </div>
+
+        <button type="button" class="btn btn-primary" style="width:100%; height:46px; font-size:1rem; margin-bottom:12px;" onclick="app.activateLicense()">
+          <span>✓</span> Activar Licencia Permanente
+        </button>
+
+        <button type="button" class="btn btn-whatsapp" style="width:100%; height:46px; font-size:0.92rem;" onclick="app.requestActivationWhatsApp()">
+          <span>📲</span> Solicitar Código por WhatsApp
+        </button>
+
+        <div id="activationDaysLeftNotice" style="margin-top:14px; font-size:0.75rem; color:var(--amber); font-weight:600;">
+          ⏳ Te quedan 7 días de prueba completa.
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
